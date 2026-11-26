@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#19231e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="description" content="План домашних тренировок и таймер комплекса на пресс.">
+  <title>План тренировок</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./style.css?v=6">
+  <script type="module" src="./app.js?v=6"></script>
+</head>
+<body>
+  <header class="mast"><div class="frame brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>План тренировок</div></header>
+  <main class="frame">
+    <section id="overview" aria-labelledby="day-title">
+      <nav id="week" aria-label="Дни недели"></nav>
+      <header class="day-hero">
+        <p id="day-date" class="eyebrow"></p>
+        <h1 id="day-title"></h1>
+        <p id="day-muscles"></p>
+        <p id="day-time"></p>
+      </header>
+      <div id="day-plan" aria-label="План упражнений"></div>
+      <div class="bottom-bar" id="begin-bar">
+        <button class="primary wide" id="begin" type="button">Начать</button>
+      </div>
+      <section class="kettlebell-entry" aria-labelledby="kettlebell-entry-title">
+        <div>
+          <h2 id="kettlebell-entry-title">Комплексы с гирей</h2>
+          <p id="kettlebell-entry-summary" class="muted"></p>
+        </div>
+        <button id="kettlebell-open" class="outline" type="button">Все 16 видео</button>
+        <button id="kettlebell-today" class="outline" type="button" hidden>Открыть вариант дня</button>
+      </section>
+      <details class="calendar">
+        <summary>Календарь iPhone</summary>
+        <label class="time-choice">Начало тренировки<select id="calendar-start">
+          <option value="20:00">20:00</option><option value="20:30">20:30</option>
+        </select></label>
+        <p id="calendar-note">Уведомление в 18:30 по будням.</p>
+        <button class="outline" id="calendar-export" type="button">Скачать расписание для календаря</button>
+      </details>
+    </section>
+    <section id="kettlebell-library" aria-labelledby="kettlebell-title" hidden>
+      <header class="session-head">
+        <button id="kettlebell-back" class="outline" type="button">К плану</button>
+        <p class="muted">16 видео</p>
+      </header>
+      <article class="exercise-card kettlebell-player">
+        <header class="exercise-head">
+          <p id="kettlebell-kind" class="muted"></p>
+          <h1 id="kettlebell-title" tabindex="-1"></h1>
+          <p id="kettlebell-moves"></p>
+          <p id="kettlebell-format" class="muted" hidden></p>
+        </header>
+        <video id="kettlebell-video" controls playsinline preload="none"></video>
+        <div id="kettlebell-chapters" class="kettlebell-chapters" aria-label="Упражнения в видео" hidden></div>
+        <p id="kettlebell-error" class="kettlebell-error" role="status" hidden>Видео не загрузилось. Проверь интернет и попробуй ещё раз.</p>
+      </article>
+      <div class="kettlebell-choices" aria-labelledby="kettlebell-list-title">
+        <h2 id="kettlebell-list-title">Все видео с гирей</h2>
+        <div id="kettlebell-list" class="kettlebell-list"></div>
+      </div>
+    </section>
+    <section id="session" aria-labelledby="exercise-title" hidden>
+      <header class="session-head">
+        <button class="outline" id="back" type="button">К плану</button>
+        <p id="position" class="muted"></p>
+      </header>
+      <article class="exercise-card">
+        <div class="exercise-head">
+          <p id="gear" class="muted"></p>
+          <h1 id="exercise-title" tabindex="-1"></h1>
+          <p id="dose"></p>
+        </div>
+        <section id="timer" class="timer" aria-label="Таймер пресса" hidden>
+          <p id="timer-status" role="status"></p>
+          <div id="timer-clock" role="timer" aria-label="Оставшееся время">0:00</div>
+          <progress id="timer-progress" aria-label="Прошло в текущем интервале"></progress>
+          <p id="timer-next"></p>
+          <button class="timer-button" id="timer-toggle" type="button">Запустить таймер</button>
+        </section>
+        <div id="exercise-content">
+          <video id="exercise-video" playsinline muted loop controls preload="metadata" hidden></video>
+          <div class="video-details">
+            <p id="video-status" class="muted" hidden></p>
+            <a id="video-source" target="_blank" rel="noopener noreferrer" hidden></a>
+          </div>
+          <div class="info">
+            <div><h2>Работающие мышцы</h2><p id="muscles"></p></div>
+            <div><h2>Как выполнять</h2><p id="tip"></p></div>
+            <div><h2>Чего избегать</h2><p id="avoid"></p></div>
+          </div>
+        </div>
+      </article>
+      <div class="bottom-bar">
+        <button class="primary wide" id="next" type="button">Следующее упражнение</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
