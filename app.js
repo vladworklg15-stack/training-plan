@@ -1,9 +1,9 @@
-import {exercises,muscles} from './exercises.js';
+import {exercises,muscles} from './exercises.js?v=8';
 import {exerciseVideos} from './videos.js';
-import {exerciseIllustrations} from './illustrations.js';
+import {exerciseIllustrations} from './illustrations.js?v=8';
 import {kettlebellAlternatives,kettlebellMedia,kettlebellVideos} from './kettlebells.js';
-import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js';
-import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js';
+import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js?v=8';
+import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js?v=8';
 
 const el=id=>document.getElementById(id);
 const overview=el('overview'), session=el('session');
@@ -33,7 +33,7 @@ let kettlebellOpener=null;
 let lastKettlebell=kettlebellVideos[0];
 
 function resetScroll(){window.scrollTo(0,0);}
-function titleFor(item){return item.id==='core'?'Комплекс на пресс':exercises[item.id].title;}
+function titleFor(item){return item.id==='core'?'Комплекс на пресс':item.title||exercises[item.id].title;}
 function gearFor(item){return item.id==='core'?'Коврик':item.gear||exercises[item.id].gear;}
 function doseFor(item){
   if(item.id==='core') return coreRounds+' круга · '+formatClock(coreSeconds*1000);
@@ -47,9 +47,13 @@ function workoutFor(day){return plans[day.key];}
 function recover(day){
   const value=read(storeKey);
   if(value?.date!==sessionDate(day.date) || value.key!==day.key ||
-    !Number.isInteger(value.index) || value.index<0 || value.index>=workoutFor(day).length) return null;
+    !Number.isInteger(value.index) || value.index<0) return null;
   if(value.timer && !['running','paused','complete'].includes(value.timer.mode)) return null;
-  return value;
+  // Older Thursday sessions were saved before swings were inserted at the start.
+  const index=value.exerciseId ? workoutFor(day).findIndex(item=>item.id===value.exerciseId)
+    : day.key==='thu' ? value.index+1 : value.index;
+  if(index<0 || index>=workoutFor(day).length)return null;
+  return {...value,index};
 }
 function newDay() {
   const now=new Date();
@@ -87,7 +91,7 @@ function renderOverview(){
   text('day-date',(isToday?'Сегодня · ':'')+dateFormat.format(selected.date));
   text('day-title',summary?.title||'День отдыха');
   text('day-muscles',summary?.muscles||'');
-  text('day-time',summary?`Ориентир начала ${el('calendar-start').value}`:'');
+  text('day-time',summary?.allDay?'В удобное время':summary?`Ориентир начала ${el('calendar-start').value}`:'');
   const entries=workoutFor(selected);
   el('day-plan').replaceChildren(...entries.map(item=>{
     const row=make('article','plan-row');
@@ -181,7 +185,7 @@ kettlebellPlayer.addEventListener('error',()=>{
 });
 
 function persist(){
-  save(storeKey,active?.finished?null:active);
+  save(storeKey,!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id});
 }
 
 function openAudio(){

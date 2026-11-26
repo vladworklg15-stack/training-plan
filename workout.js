@@ -4,19 +4,20 @@ export const weekDays = [
 ];
 
 const set = (id,sets,reps,gear)=>({id,sets,reps,gear});
-const cardio = (id,target)=>({id,target});
+const cardio = (id,target,gear)=>({id,target,gear});
 const abs = {id:'core'};
+const weekendWalk = {...cardio('walk','Минимум 5 км','Беговая дорожка или прогулка на улице'),title:'Ходьба'};
 export const plans = {
-  mon:[set('goblet',3,'15'),set('rdl',3,'8–15'),set('lunge',2,'8–12 на ногу'),set('calf',3,'12–20 на ногу'),abs],
+  mon:[set('goblet',3,'15'),set('rdl',3,'8–15'),set('gobletLunge',2,'8–10 на ногу'),set('calf',3,'12–20 на ногу'),abs],
   tue:[set('pull',2,'10–12'),set('floorPress',3,'8–15'),set('row',2,'10–15 на руку'),
     set('curl',2,'10–15 на руку'),set('pushdown',2,'10–15 на руку'),cardio('cycle','40 минут')],
   wed:[abs,set('roller',2,'1 подъём и спуск'),set('gripper',2,'10–15 на руку'),cardio('walk','До 5 км')],
-  thu:[set('split',3,'8–12 на ногу','Собственный вес'),set('kickRdl',3,'8–12 на ногу'),
+  thu:[set('swing',2,'8–10'),set('split',3,'8–12 на ногу','Собственный вес'),set('kickRdl',3,'8–12 на ногу'),
     set('bridge',2,'10–15 на ногу'),set('bentCalf',3,'12–20')],
   fri:[set('pull',2,'10–12'),set('overhead',2,'8–12 на руку'),set('row',2,'10–15 на руку'),
     set('pushup',2,'8–15'),set('shrug',3,'12–20'),set('hammer',2,'10–15'),
     set('pushdown',2,'10–15 на руку'),cardio('cycle','40 минут')],
-  sat:[],sun:[]
+  sat:[weekendWalk],sun:[weekendWalk]
 };
 
 export const coreMoves = [

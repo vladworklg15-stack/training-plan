@@ -1,10 +1,10 @@
 import {exerciseVideos} from './videos.js';
-import {exerciseIllustrations} from './illustrations.js';
+import {exerciseIllustrations} from './illustrations.js?v=8';
 
-const name='training-week-v7';
+const name='training-week-v8';
 const scope=self.registration.scope;
 const absolute=path=>new URL(path,scope).href;
-const shell=['./index.html','./app.js?v=7','./videos.js','./illustrations.js','./kettlebells.js','./exercises.js','./schedule.js','./workout.js','./style.css?v=7','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const shell=['./index.html','./app.js?v=8','./videos.js','./illustrations.js?v=8','./kettlebells.js','./exercises.js?v=8','./schedule.js?v=8','./workout.js?v=8','./style.css?v=8','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const assets=new Set(shell.map(absolute));
 const videos=new Set(Object.values(exerciseVideos).filter(clip=>clip.file).map(clip=>absolute(clip.file)));
 const illustrations=new Set(Object.values(exerciseIllustrations).map(drawing=>absolute(drawing.file)));
