@@ -9,8 +9,8 @@
   <title>План тренировок</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=6">
-  <script type="module" src="./app.js?v=6"></script>
+  <link rel="stylesheet" href="./style.css?v=7">
+  <script type="module" src="./app.js?v=7"></script>
 </head>
 <body>
   <header class="mast"><div class="frame brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>План тренировок</div></header>
@@ -85,6 +85,10 @@
         </section>
         <div id="exercise-content">
           <video id="exercise-video" playsinline muted loop controls preload="metadata" hidden></video>
+          <figure id="exercise-figure" hidden>
+            <img id="exercise-illustration" alt="">
+            <figcaption id="exercise-phases" hidden><span>Исходное положение</span><span>Рабочее положение</span></figcaption>
+          </figure>
           <div class="video-details">
             <p id="video-status" class="muted" hidden></p>
             <a id="video-source" target="_blank" rel="noopener noreferrer" hidden></a>

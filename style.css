@@ -62,6 +62,9 @@ video { width: 100%; height: auto; display: block; }
 .video-details a { display: inline-flex; min-height: 44px; align-items: center; color: #365543; font-size: .92rem; }
 .video-details p { font-size: .92rem; }
 video { max-height: 440px; background: #f5f5f0; }
+#exercise-figure { margin:0; background:#fff; }
+#exercise-illustration { display:block; width:100%; max-height:480px; object-fit:contain; }
+#exercise-phases { display:grid; grid-template-columns:1fr 1fr; gap:9px; padding:5px 12px 12px; text-align:center; font-size:.875rem; color:var(--muted); }
 .timer { margin: 0 clamp(14px, 4vw, 23px) 12px; border-radius: 14px; padding: 13px; background: var(--forest); color: #eff9ea; }
 .timer[data-mode=rest] { background: #334c64; }
 #timer-status,#timer-next { min-height: 1.5rem; font-size: .94rem; }

@@ -1,5 +1,6 @@
 import {exercises,muscles} from './exercises.js';
 import {exerciseVideos} from './videos.js';
+import {exerciseIllustrations} from './illustrations.js';
 import {kettlebellAlternatives,kettlebellMedia,kettlebellVideos} from './kettlebells.js';
 import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js';
 import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js';
@@ -7,6 +8,7 @@ import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseT
 const el=id=>document.getElementById(id);
 const overview=el('overview'), session=el('session');
 const video=el('exercise-video'), videoSource=el('video-source');
+const exerciseFigure=el('exercise-figure'), illustration=el('exercise-illustration');
 const kettlebellLibrary=el('kettlebell-library'), kettlebellPlayer=el('kettlebell-video');
 const dateFormat=new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',month:'long'});
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -234,16 +236,25 @@ function showExercise(id){
     video.removeAttribute('src');
     video.load();
   }
+  exerciseFigure.hidden=true;
+  illustration.removeAttribute('src');
   if(!next)return;
   text('muscles',[...new Set([...next.primary,...next.secondary])].map(key=>muscles[key]).join(', '));
   text('tip',next.tip);
   text('avoid',next.avoid);
   const clip=exerciseVideos[id];
   const hasFile=Boolean(clip?.file);
+  const drawing=exerciseIllustrations[id];
+  exerciseFigure.hidden=!drawing || hasFile;
+  if(!exerciseFigure.hidden){
+    illustration.src=drawing.file;
+    illustration.alt=drawing.alt;
+    el('exercise-phases').hidden=!drawing.phases;
+  }
   video.hidden=!hasFile;
   videoSource.hidden=!clip?.url;
   text('video-status','Видео для этого упражнения ещё подбирается.');
-  el('video-status').hidden=hasFile || Boolean(clip?.url);
+  el('video-status').hidden=hasFile || Boolean(clip?.url) || !exerciseFigure.hidden;
   if(clip?.url){
     videoSource.href=clip.url;
     text('video-source',clip.credit);
@@ -402,4 +413,12 @@ video.addEventListener('error',()=>{
   el('video-status').hidden=false;
 });
 video.addEventListener('loadeddata',()=>{el('video-status').hidden=true;});
+illustration.addEventListener('error',()=>{
+  if(!illustration.hasAttribute('src'))return;
+  exerciseFigure.hidden=true;
+  if(videoSource.hidden){
+    text('video-status','Иллюстрация не загрузилась.');
+    el('video-status').hidden=false;
+  }
+});
 if(location.protocol!=='file:'&&'serviceWorker' in navigator)navigator.serviceWorker.register('./sw.js',{type:'module'}).catch(()=>{});

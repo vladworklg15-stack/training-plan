@@ -1,16 +1,18 @@
 import {exerciseVideos} from './videos.js';
+import {exerciseIllustrations} from './illustrations.js';
 
-const name='training-week-v6';
+const name='training-week-v7';
 const scope=self.registration.scope;
 const absolute=path=>new URL(path,scope).href;
-const shell=['./index.html','./app.js?v=6','./videos.js','./kettlebells.js','./exercises.js','./schedule.js','./workout.js','./style.css?v=6','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const shell=['./index.html','./app.js?v=7','./videos.js','./illustrations.js','./kettlebells.js','./exercises.js','./schedule.js','./workout.js','./style.css?v=7','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const assets=new Set(shell.map(absolute));
 const videos=new Set(Object.values(exerciseVideos).filter(clip=>clip.file).map(clip=>absolute(clip.file)));
+const illustrations=new Set(Object.values(exerciseIllustrations).map(drawing=>absolute(drawing.file)));
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(name).then(async cache=>{
     await cache.addAll([...assets]);
-    await Promise.allSettled([...videos].map(video=>cache.add(video)));
+    await Promise.allSettled([...videos,...illustrations].map(asset=>cache.add(asset)));
   }));
 });
 self.addEventListener('activate',event=>{
@@ -45,7 +47,7 @@ self.addEventListener('fetch',event=>{
     event.respondWith(cachedVideo(request));
   }else if(request.mode==='navigate'&&new URL(request.url).pathname===new URL(scope).pathname){
     event.respondWith(fetch(request).catch(()=>caches.match(absolute('./index.html'))));
-  }else if(assets.has(request.url)){
+  }else if(assets.has(request.url)||illustrations.has(request.url)){
     event.respondWith(caches.match(request).then(response=>response||fetch(request)));
   }
 });
