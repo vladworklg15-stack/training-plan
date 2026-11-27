@@ -25,6 +25,7 @@ const save = (key,value) => {
 
 let selected=null;
 let active=null;
+let pageProgress=null;
 let currentExercise=null;
 const timerSignals={
   work:'./media/timer-work.wav',
@@ -51,15 +52,14 @@ function text(id,value) {
 }
 function workoutFor(day){return plans[day.key];}
 function recover(day){
-  const value=read(storeKey);
+  const value=pageProgress??read(storeKey);
   if(value?.date!==sessionDate(day.date) || value.key!==day.key ||
     !Number.isInteger(value.index) || value.index<0) return null;
-  if(value.timer && !['running','paused','complete'].includes(value.timer.mode)) return null;
   // Older sessions recorded only the index, before the kettlebell exercises were inserted.
   const index=value.exerciseId ? workoutFor(day).findIndex(item=>item.id===value.exerciseId)
     : value.index+Number(value.index>=(addedExercisePositions[day.key]??Infinity));
   if(index<0 || index>=workoutFor(day).length)return null;
-  return {...value,index};
+  return {...value,index,timer:value===pageProgress?value.timer:null};
 }
 function newDay() {
   const now=new Date();
@@ -191,7 +191,9 @@ kettlebellPlayer.addEventListener('error',()=>{
 });
 
 function persist(){
-  save(storeKey,!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id});
+  pageProgress=!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id};
+  const {key,date,index,exerciseId}=pageProgress||{};
+  save(storeKey,pageProgress?{key,date,index,exerciseId}:null);
 }
 
 function signal(cue){
@@ -410,6 +412,15 @@ document.addEventListener('visibilitychange',()=>{
   updateDay();
   tick(false);
   keepScreenOn();
+});
+window.addEventListener('pageshow',event=>{
+  if(!event.persisted)return;
+  if(pageProgress)pageProgress.timer=null;
+  if(!active?.timer)return;
+  active.timer=null;
+  timerAudio.pause();
+  releaseScreen();
+  renderSession();
 });
 setInterval(()=>tick(true),150);
 setInterval(updateDay,30000);
