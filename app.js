@@ -27,6 +27,11 @@ let selected=null;
 let active=null;
 let currentExercise=null;
 let audioContext=null;
+const timerSignals={
+  work:[[660,.12],[880,.18]],
+  rest:[[540,.13],[400,.20]],
+  complete:[[523,.13],[659,.13],[784,.28]]
+};
 let wakeLock=null;
 let wakeRequest=null;
 let currentDate=sessionDate(new Date());
@@ -189,26 +194,30 @@ function persist(){
   save(storeKey,!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id});
 }
 
-function openAudio(){
+function openAudio(onReady=()=>{}){
   const Audio=window.AudioContext||window.webkitAudioContext;
   if(!Audio)return;
   try {
     audioContext ||= new Audio();
-    if(audioContext.state==='suspended')void audioContext.resume().catch(()=>{});
+    if(audioContext.state==='running')onReady();
+    else void audioContext.resume().then(onReady).catch(()=>{});
   } catch {}
 }
-function signal(){
+function signal(cue){
   if(audioContext?.state!=='running')return;
-  const oscillator=audioContext.createOscillator();
-  const gain=audioContext.createGain();
-  const start=audioContext.currentTime;
-  oscillator.frequency.value=660;
-  gain.gain.setValueAtTime(.001,start);
-  gain.gain.exponentialRampToValueAtTime(.13,start+.022);
-  gain.gain.exponentialRampToValueAtTime(.001,start+.23);
-  oscillator.connect(gain).connect(audioContext.destination);
-  oscillator.start(start);
-  oscillator.stop(start+.24);
+  let start=audioContext.currentTime;
+  for(const [frequency,duration] of timerSignals[cue]){
+    const oscillator=audioContext.createOscillator();
+    const gain=audioContext.createGain();
+    oscillator.frequency.value=frequency;
+    gain.gain.setValueAtTime(.001,start);
+    gain.gain.exponentialRampToValueAtTime(.14,start+.015);
+    gain.gain.exponentialRampToValueAtTime(.001,start+duration);
+    oscillator.connect(gain).connect(audioContext.destination);
+    oscillator.start(start);
+    oscillator.stop(start+duration);
+    start+=duration+.04;
+  }
 }
 function keepScreenOn(){
   if(wakeLock || wakeRequest || document.hidden || active?.timer?.mode!=='running')return;
@@ -325,7 +334,7 @@ function tick(sound){
   const changed=updateTimer(active.timer,now);
   if(changed!==active.timer){
     active.timer=changed;
-    if(sound&&!document.hidden)signal();
+    if(sound&&!document.hidden)signal(changed.mode==='complete'?'complete':intervals[changed.phase].kind);
     if(changed.mode==='complete')releaseScreen();
     persist();
   }
@@ -368,12 +377,19 @@ el('next').addEventListener('click',()=>{
 });
 el('timer-toggle').addEventListener('click',()=>{
   const now=Date.now();
-  openAudio();
-  if(!active.timer)active.timer=beginTimer(now);
+  const first=!active.timer;
+  if(first)active.timer=beginTimer(now);
   else if(active.timer.mode==='paused')active.timer=resumeTimer(active.timer,now);
   else active.timer=pauseTimer(active.timer,now);
-  if(active.timer.mode==='running')keepScreenOn();
-  else releaseScreen();
+  if(active.timer.mode==='running'){
+    const started=active.timer;
+    openAudio(()=>{
+      if(first&&!document.hidden&&active?.timer===started)signal('work');
+    });
+    keepScreenOn();
+  }else{
+    releaseScreen();
+  }
   persist();
   renderTimer(now);
 });
@@ -405,6 +421,7 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   updateDay();
   tick(false);
+  if(audioContext&&active?.timer?.mode==='running')openAudio();
   keepScreenOn();
 });
 setInterval(()=>tick(true),150);
