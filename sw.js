@@ -1,14 +1,14 @@
 import {exerciseVideos} from './videos.js';
 import {exerciseIllustrations} from './illustrations.js?v=9';
 
-const name='training-week-v13';
+const name='training-week-v14';
 const scope=self.registration.scope;
 const absolute=path=>new URL(path,scope).href;
-const shell=['./index.html','./app.js?v=13','./videos.js','./illustrations.js?v=9','./kettlebells.js','./exercises.js?v=9','./schedule.js?v=9','./workout.js?v=9','./style.css?v=13','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const shell=['./index.html','./app.js?v=14','./videos.js','./illustrations.js?v=9','./kettlebells.js','./exercises.js?v=9','./schedule.js?v=9','./workout.js?v=9','./style.css?v=13','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const assets=new Set(shell.map(absolute));
 const media=new Set([
   ...Object.values(exerciseVideos).filter(clip=>clip.file).map(clip=>clip.file),
-  './media/timer-work.wav','./media/timer-rest.wav','./media/timer-complete.wav'
+  './timer-core.m4a'
 ].map(absolute));
 const illustrations=new Set(Object.values(exerciseIllustrations).map(drawing=>absolute(drawing.file)));
 
@@ -37,7 +37,7 @@ async function cachedMedia(request){
   if(start>=total||end<start)return new Response(null,{status:416,headers:{'Content-Range':`bytes */${total}`}});
   const part=body.slice(start,end+1);
   return new Response(part,{status:206,headers:{
-    'Content-Type':cached.headers.get('Content-Type')||(request.url.endsWith('.wav')?'audio/wav':'video/mp4'),
+    'Content-Type':request.url.endsWith('.m4a')?'audio/mp4':cached.headers.get('Content-Type')||'video/mp4',
     'Content-Length':String(part.size),
     'Content-Range':`bytes ${start}-${end}/${total}`,
     'Accept-Ranges':'bytes'

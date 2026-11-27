@@ -27,16 +27,9 @@ let selected=null;
 let active=null;
 let pageProgress=null;
 let currentExercise=null;
-const timerSignals={
-  work:'./media/timer-work.wav',
-  rest:'./media/timer-rest.wav',
-  complete:'./media/timer-complete.wav'
-};
-const timerNotes={work:[880],rest:[520,392],complete:[660,880,1100]};
 const timerAudio=el('timer-audio');
-let audioContext=null;
-let cueOutput=null;
-let cueRequest=0;
+let audioRequest=0;
+const phaseStarts=intervals.map((_,index)=>intervals.slice(0,index).reduce((sum,phase)=>sum+phase.seconds,0));
 let wakeLock=null;
 let wakeRequest=null;
 let currentDate=sessionDate(new Date());
@@ -210,71 +203,36 @@ function persist(){
   save(storeKey,{key,date,index,exerciseId});
 }
 
-function stopCue(){
-  cueRequest++;
-  cueOutput?.disconnect();
-  cueOutput=null;
+function timerAudioPosition(timer,now){
+  return phaseStarts[timer.phase]+intervals[timer.phase].seconds-Math.max(0,timer.until-now)/1000;
+}
+
+function stopTimerAudio(){
+  audioRequest++;
   timerAudio.pause();
   el('timer-audio-status').hidden=true;
 }
 
-function playRecordedCue(cue,request){
-  const file=timerSignals[cue];
-  if(timerAudio.getAttribute('src')===file)timerAudio.currentTime=0;
-  else timerAudio.setAttribute('src',file);
+function startTimerAudio(timer,now){
+  const request=++audioRequest;
+  el('timer-audio-status').hidden=true;
+  timerAudio.currentTime=timerAudioPosition(timer,now);
+  // Safari must receive play() directly in the start or resume button handler.
   void timerAudio.play().catch(error=>{
-    if(request!==cueRequest||error.name==='AbortError')return;
-    text('timer-audio-status','Safari или браузер не воспроизвёл сигнал таймера.');
+    if(request!==audioRequest||error.name==='AbortError')return;
+    text('timer-audio-status',error.name==='NotAllowedError'
+      ? 'Браузер заблокировал звук таймера.'
+      : 'Аудиодорожка таймера не загрузилась.');
     el('timer-audio-status').hidden=false;
   });
 }
 
-function playTimerNotes(cue){
-  const notes=timerNotes[cue];
-  const start=audioContext.currentTime;
-  const output=audioContext.createGain();
-  cueOutput=output;
-  output.connect(audioContext.destination);
-  notes.forEach((frequency,index)=>{
-    const from=start+index*.17;
-    const oscillator=audioContext.createOscillator();
-    oscillator.type='triangle';
-    oscillator.frequency.value=frequency;
-    const envelope=audioContext.createGain();
-    envelope.gain.setValueAtTime(.001,from);
-    envelope.gain.exponentialRampToValueAtTime(.42,from+.012);
-    envelope.gain.exponentialRampToValueAtTime(.001,from+.15);
-    oscillator.connect(envelope).connect(output);
-    oscillator.start(from);
-    oscillator.stop(from+.16);
-  });
-}
-
-function signal(cue,fromTap=false){
-  stopCue();
-  const request=cueRequest;
-  if(fromTap){
-    try {
-      const Context=window.AudioContext||window.webkitAudioContext;
-      if(Context&&!audioContext)audioContext=new Context();
-      if(audioContext&&navigator.audioSession)navigator.audioSession.type='playback';
-    } catch {}
-  }
-  if(audioContext?.state==='running'){
-    playTimerNotes(cue);
-  }else if(fromTap&&audioContext){
-    // The first resume call must run directly inside the timer button's tap.
-    void audioContext.resume().then(()=>{
-      if(request!==cueRequest)return;
-      if(audioContext.state==='running')playTimerNotes(cue);
-      else playRecordedCue(cue,request);
-    }).catch(()=>{
-      if(request===cueRequest)playRecordedCue(cue,request);
-    });
-  }else{
-    playRecordedCue(cue,request);
-  }
-}
+timerAudio.addEventListener('playing',()=>{
+  const timer=active?.timer;
+  if(timer?.mode!=='running')return;
+  const expected=timerAudioPosition(timer,Date.now());
+  if(Math.abs(timerAudio.currentTime-expected)>1)timerAudio.currentTime=expected;
+});
 function keepScreenOn(){
   if(wakeLock || wakeRequest || document.hidden || active?.timer?.mode!=='running')return;
   const request=navigator.wakeLock?.request('screen');
@@ -384,13 +342,12 @@ function renderSession(focus=false){
   }
 }
 
-function tick(sound){
+function tick(){
   if(session.hidden||active?.timer?.mode!=='running')return;
   const now=Date.now();
   const changed=updateTimer(active.timer,now);
   if(changed!==active.timer){
     active.timer=changed;
-    if(sound&&!document.hidden)signal(changed.mode==='complete'?'complete':intervals[changed.phase].kind);
     if(changed.mode==='complete')releaseScreen();
     persist();
   }
@@ -403,7 +360,7 @@ function overviewScreen(){
     persist();
   }
   releaseScreen();
-  stopCue();
+  stopTimerAudio();
   showExercise(null);
   session.hidden=true;
   overview.hidden=false;
@@ -445,10 +402,10 @@ el('timer-toggle').addEventListener('click',()=>{
   else if(active.timer.mode==='paused')active.timer=resumeTimer(active.timer,now);
   else active.timer=pauseTimer(active.timer,now);
   if(active.timer.mode==='running'){
-    signal(intervals[active.timer.phase].kind,true);
+    startTimerAudio(active.timer,now);
     keepScreenOn();
   }else{
-    stopCue();
+    stopTimerAudio();
     releaseScreen();
   }
   persist();
@@ -481,7 +438,7 @@ function updateDay(){
 document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   updateDay();
-  tick(false);
+  tick();
   keepScreenOn();
 });
 window.addEventListener('pageshow',event=>{
@@ -491,7 +448,7 @@ window.addEventListener('pageshow',event=>{
   if(active)active.timer=null;
   overviewScreen();
 });
-setInterval(()=>tick(true),150);
+setInterval(tick,150);
 setInterval(updateDay,30000);
 selected=newDay();
 renderOverview();
