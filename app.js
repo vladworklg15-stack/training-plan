@@ -1,9 +1,9 @@
-import {exercises,muscles} from './exercises.js?v=8';
+import {exercises,muscles} from './exercises.js?v=9';
 import {exerciseVideos} from './videos.js';
-import {exerciseIllustrations} from './illustrations.js?v=8';
+import {exerciseIllustrations} from './illustrations.js?v=9';
 import {kettlebellAlternatives,kettlebellMedia,kettlebellVideos} from './kettlebells.js';
-import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js?v=8';
-import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js?v=8';
+import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js?v=9';
+import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js?v=9';
 
 const el=id=>document.getElementById(id);
 const overview=el('overview'), session=el('session');
@@ -14,6 +14,7 @@ const dateFormat=new Intl.DateTimeFormat('ru-RU',{weekday:'long',day:'numeric',m
 const reduced=matchMedia('(prefers-reduced-motion: reduce)');
 const storeKey='training-week-in-progress-v1';
 const settingsKey='training-week-calendar-start';
+const addedExercisePositions={wed:1,thu:0,fri:7};
 const read = key => {
   try { return JSON.parse(localStorage.getItem(key)); }
   catch { return null; }
@@ -49,9 +50,9 @@ function recover(day){
   if(value?.date!==sessionDate(day.date) || value.key!==day.key ||
     !Number.isInteger(value.index) || value.index<0) return null;
   if(value.timer && !['running','paused','complete'].includes(value.timer.mode)) return null;
-  // Older Thursday sessions were saved before swings were inserted at the start.
+  // Older sessions recorded only the index, before the kettlebell exercises were inserted.
   const index=value.exerciseId ? workoutFor(day).findIndex(item=>item.id===value.exerciseId)
-    : day.key==='thu' ? value.index+1 : value.index;
+    : value.index+Number(value.index>=(addedExercisePositions[day.key]??Infinity));
   if(index<0 || index>=workoutFor(day).length)return null;
   return {...value,index};
 }

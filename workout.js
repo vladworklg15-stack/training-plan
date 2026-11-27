@@ -11,12 +11,12 @@ export const plans = {
   mon:[set('goblet',3,'15'),set('rdl',3,'8–15'),set('gobletLunge',2,'8–10 на ногу'),set('calf',3,'12–20 на ногу'),abs],
   tue:[set('pull',2,'10–12'),set('floorPress',3,'8–15'),set('row',2,'10–15 на руку'),
     set('curl',2,'10–15 на руку'),set('pushdown',2,'10–15 на руку'),cardio('cycle','40 минут')],
-  wed:[abs,set('roller',2,'1 подъём и спуск'),set('gripper',2,'10–15 на руку'),cardio('walk','До 5 км')],
+  wed:[abs,set('sideBend',2,'8–10 на сторону'),set('roller',2,'1 подъём и спуск'),set('gripper',2,'10–15 на руку'),cardio('walk','До 5 км')],
   thu:[set('swing',2,'8–10'),set('split',3,'8–12 на ногу','Собственный вес'),set('kickRdl',3,'8–12 на ногу'),
     set('bridge',2,'10–15 на ногу'),set('bentCalf',3,'12–20')],
-  fri:[set('pull',2,'10–12'),set('overhead',2,'8–12 на руку'),set('row',2,'10–15 на руку'),
+  fri:[set('pull',2,'10–12'),set('overhead',2,'8–12'),set('row',2,'10–15 на руку'),
     set('pushup',2,'8–15'),set('shrug',3,'12–20'),set('hammer',2,'10–15'),
-    set('pushdown',2,'10–15 на руку'),cardio('cycle','40 минут')],
+    set('pushdown',2,'10–15 на руку'),set('plankDrag',2,'4–6 на сторону'),cardio('cycle','40 минут')],
   sat:[weekendWalk],sun:[weekendWalk]
 };
 

@@ -60,7 +60,7 @@ export const exerciseIllustrations = {
     "phases": true
   },
   "gripper": {
-    "file": "./media/technique-gripper.jpg",
+    "file": "./media/technique-gripper-v2.jpg",
     "alt": "Одна рукоять пружинного эспандера упирается в ладонь, вторую сжимают пальцы. Запястье прямое.",
     "phases": false
   },
@@ -87,6 +87,46 @@ export const exerciseIllustrations = {
   "kickRdl": {
     "file": "./media/technique-kickRdl.jpg",
     "alt": "Передняя стопа прижата к полу, задний носок помогает держать баланс. При наклоне гиря движется близко к передней ноге.",
+    "phases": true
+  },
+  "bentCalf": {
+    "file": "./media/technique-bentCalf.jpg",
+    "alt": "Подними обе пятки, сохраняя небольшой сгиб коленей и опору на переднюю часть стоп.",
+    "phases": true
+  },
+  "bridge": {
+    "file": "./media/technique-bridge.jpg",
+    "alt": "Подними таз, опираясь на плечи и одну стопу. Вторая стопа остаётся над ковриком.",
+    "phases": true
+  },
+  "pushup": {
+    "file": "./media/technique-pushup.jpg",
+    "alt": "Из высокой планки опусти грудь между ладонями. Корпус и бёдра остаются на одной линии.",
+    "phases": true
+  },
+  "shrug": {
+    "file": "./media/technique-shrug.jpg",
+    "alt": "С прямыми руками подними оба плеча к ушам. Гантели двигаются вместе с плечами.",
+    "phases": true
+  },
+  "cycle": {
+    "file": "./media/technique-cycle.jpg",
+    "alt": "В нижней точке педали колено слегка согнуто. Обе стопы на педалях, кисти лежат на руле.",
+    "phases": false
+  },
+  "sideBend": {
+    "file": "./media/technique-sideBend.jpg",
+    "alt": "Гиря в одной руке у бедра. Наклонись немного к гире, не смещая таз и не разворачивая плечи.",
+    "phases": true
+  },
+  "plankDrag": {
+    "file": "./media/technique-plankDrag.jpg",
+    "alt": "Из высокой планки протяни гирю по полу к другой стороне. Опорная ладонь под плечом, таз не разворачивается.",
+    "phases": true
+  },
+  "overhead": {
+    "file": "./media/technique-overhead.jpg",
+    "alt": "На стуле обе стопы стоят на полу. Обе гантели движутся от плеч вверх, корпус остаётся вертикальным.",
     "phases": true
   }
 };
