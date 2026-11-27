@@ -9,8 +9,8 @@
   <title>План тренировок</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=9">
-  <script type="module" src="./app.js?v=10"></script>
+  <link rel="stylesheet" href="./style.css?v=11">
+  <script type="module" src="./app.js?v=11"></script>
 </head>
 <body>
   <header class="mast"><div class="frame brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>План тренировок</div></header>
@@ -82,6 +82,9 @@
           <progress id="timer-progress" aria-label="Прошло в текущем интервале"></progress>
           <p id="timer-next"></p>
           <button class="timer-button" id="timer-toggle" type="button">Запустить таймер</button>
+          <button class="outline" id="timer-audio-test" type="button">Проверить звук</button>
+          <p id="timer-audio-status" role="status" hidden></p>
+          <audio id="timer-audio" src="./media/timer-work.wav" preload="auto" hidden></audio>
         </section>
         <div id="exercise-content">
           <video id="exercise-video" playsinline muted loop controls preload="metadata" hidden></video>

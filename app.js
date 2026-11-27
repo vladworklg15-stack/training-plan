@@ -26,12 +26,12 @@ const save = (key,value) => {
 let selected=null;
 let active=null;
 let currentExercise=null;
-let audioContext=null;
 const timerSignals={
-  work:[[660,.12],[880,.18]],
-  rest:[[540,.13],[400,.20]],
-  complete:[[523,.13],[659,.13],[784,.28]]
+  work:'./media/timer-work.wav',
+  rest:'./media/timer-rest.wav',
+  complete:'./media/timer-complete.wav'
 };
+const timerAudio=el('timer-audio');
 let wakeLock=null;
 let wakeRequest=null;
 let currentDate=sessionDate(new Date());
@@ -194,30 +194,17 @@ function persist(){
   save(storeKey,!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id});
 }
 
-function openAudio(onReady=()=>{}){
-  const Audio=window.AudioContext||window.webkitAudioContext;
-  if(!Audio)return;
-  try {
-    audioContext ||= new Audio();
-    if(audioContext.state==='running')onReady();
-    else void audioContext.resume().then(onReady).catch(()=>{});
-  } catch {}
-}
 function signal(cue){
-  if(audioContext?.state!=='running')return;
-  let start=audioContext.currentTime;
-  for(const [frequency,duration] of timerSignals[cue]){
-    const oscillator=audioContext.createOscillator();
-    const gain=audioContext.createGain();
-    oscillator.frequency.value=frequency;
-    gain.gain.setValueAtTime(.001,start);
-    gain.gain.exponentialRampToValueAtTime(.14,start+.015);
-    gain.gain.exponentialRampToValueAtTime(.001,start+duration);
-    oscillator.connect(gain).connect(audioContext.destination);
-    oscillator.start(start);
-    oscillator.stop(start+duration);
-    start+=duration+.04;
-  }
+  const file=timerSignals[cue];
+  if(timerAudio.getAttribute('src')===file)timerAudio.currentTime=0;
+  else timerAudio.setAttribute('src',file);
+  void timerAudio.play().then(()=>{
+    el('timer-audio-status').hidden=true;
+  }).catch(error=>{
+    if(error.name==='AbortError')return;
+    text('timer-audio-status','Звук не запустился. Нажми «Проверить звук».');
+    el('timer-audio-status').hidden=false;
+  });
 }
 function keepScreenOn(){
   if(wakeLock || wakeRequest || document.hidden || active?.timer?.mode!=='running')return;
@@ -347,6 +334,8 @@ function overviewScreen(){
     persist();
   }
   releaseScreen();
+  timerAudio.pause();
+  el('timer-audio-status').hidden=true;
   showExercise(null);
   session.hidden=true;
   overview.hidden=false;
@@ -382,17 +371,16 @@ el('timer-toggle').addEventListener('click',()=>{
   else if(active.timer.mode==='paused')active.timer=resumeTimer(active.timer,now);
   else active.timer=pauseTimer(active.timer,now);
   if(active.timer.mode==='running'){
-    const started=active.timer;
-    openAudio(()=>{
-      if(first&&!document.hidden&&active?.timer===started)signal('work');
-    });
+    signal(intervals[active.timer.phase].kind);
     keepScreenOn();
   }else{
+    timerAudio.pause();
     releaseScreen();
   }
   persist();
   renderTimer(now);
 });
+el('timer-audio-test').addEventListener('click',()=>signal('work'));
 
 el('calendar-start').value=startOptions.includes(read(settingsKey))?read(settingsKey):calendarTimes.workoutStart;
 el('calendar-start').addEventListener('change',()=>{
@@ -421,7 +409,6 @@ document.addEventListener('visibilitychange',()=>{
   if(document.hidden)return;
   updateDay();
   tick(false);
-  if(audioContext&&active?.timer?.mode==='running')openAudio();
   keepScreenOn();
 });
 setInterval(()=>tick(true),150);
