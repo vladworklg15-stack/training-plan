@@ -1,7 +1,7 @@
 import {exerciseVideos} from './videos.js';
 import {exerciseIllustrations} from './illustrations.js?v=9';
 
-const name='training-week-v17';
+const name='training-week-v18';
 const scope=self.registration.scope;
 const absolute=path=>new URL(path,scope).href;
 const shell=['./index.html','./app.js?v=17','./videos.js','./illustrations.js?v=9','./kettlebells.js','./exercises.js?v=9','./schedule.js?v=9','./workout.js?v=16','./style.css?v=13','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
@@ -44,13 +44,25 @@ async function cachedMedia(request){
   }});
 }
 
+async function openPlan(request){
+  let response;
+  try {
+    response=await fetch(request);
+    if(response.status<500)return response;
+  } catch {}
+  const saved=await caches.match(absolute('./index.html'),{cacheName:name});
+  return saved||response||Response.error();
+}
+
 self.addEventListener('fetch',event=>{
   const request=event.request;
   if(request.method!=='GET'||new URL(request.url).origin!==location.origin)return;
+  const path=new URL(request.url).pathname;
   if(media.has(request.url)){
     event.respondWith(cachedMedia(request));
-  }else if(request.mode==='navigate'&&new URL(request.url).pathname===new URL(scope).pathname){
-    event.respondWith(fetch(request).catch(()=>caches.match(absolute('./index.html'))));
+  }else if(request.mode==='navigate'&&
+    (path===new URL(scope).pathname||path===new URL(absolute('./index.html')).pathname)){
+    event.respondWith(openPlan(request));
   }else if(assets.has(request.url)||illustrations.has(request.url)){
     event.respondWith(caches.match(request).then(response=>response||fetch(request)));
   }
