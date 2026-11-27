@@ -3,7 +3,7 @@ import {exerciseVideos} from './videos.js';
 import {exerciseIllustrations} from './illustrations.js?v=9';
 import {kettlebellAlternatives,kettlebellMedia,kettlebellVideos} from './kettlebells.js';
 import {calendarTimes,makeCalendar,schedule,startOptions} from './schedule.js?v=9';
-import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js?v=9';
+import {beginTimer,coreMoves,coreRounds,coreSeconds,formatClock,intervals,pauseTimer,plans,restSeconds,resumeTimer,sessionDate,updateTimer,weekAt} from './workout.js?v=16';
 
 const el=id=>document.getElementById(id);
 const overview=el('overview'), session=el('session');
@@ -28,6 +28,8 @@ let active=null;
 let pageProgress=null;
 let currentExercise=null;
 const timerAudio=el('timer-audio');
+const defaultTimerTrack=timerAudio.getAttribute('src');
+let personalTrackUrl=null;
 let audioRequest=0;
 const phaseStarts=intervals.map((_,index)=>intervals.slice(0,index).reduce((sum,phase)=>sum+phase.seconds,0));
 let wakeLock=null;
@@ -216,6 +218,8 @@ function stopTimerAudio(){
 function startTimerAudio(timer,now){
   const request=++audioRequest;
   el('timer-audio-status').hidden=true;
+  const track=personalTrackUrl||defaultTimerTrack;
+  if(timerAudio.getAttribute('src')!==track)timerAudio.setAttribute('src',track);
   timerAudio.currentTime=timerAudioPosition(timer,now);
   // Safari must receive play() directly in the start or resume button handler.
   void timerAudio.play().catch(error=>{
@@ -233,6 +237,89 @@ timerAudio.addEventListener('playing',()=>{
   const expected=timerAudioPosition(timer,Date.now());
   if(Math.abs(timerAudio.currentTime-expected)>1)timerAudio.currentTime=expected;
 });
+
+function setupPersonalTrack(){
+  const input=el('core-music-file');
+  const remove=el('core-music-remove');
+  const cacheName='training-personal-audio';
+  const entry='./personal-core-mix.m4a';
+  const status=message=>text('core-music-status',message);
+  const open=()=>caches.open(cacheName);
+  const setTrack=(blob,name)=>{
+    if(personalTrackUrl)URL.revokeObjectURL(personalTrackUrl);
+    personalTrackUrl=blob?URL.createObjectURL(blob):null;
+    if(session.hidden)timerAudio.setAttribute('src',personalTrackUrl||defaultTimerTrack);
+    remove.hidden=!blob;
+    status(blob?'На этом устройстве: '+name:'Используются сигналы таймера.');
+  };
+
+  const durationOf=(url)=>new Promise((resolve,reject)=>{
+    const probe=document.createElement('audio');
+    const finish=error=>{
+      clearTimeout(timeout);
+      const duration=probe.duration;
+      probe.onloadedmetadata=probe.onerror=null;
+      probe.removeAttribute('src');
+      probe.load();
+      if(error)reject(error);
+      else resolve(duration);
+    };
+    const timeout=setTimeout(()=>finish(new Error('metadata timeout')),8000);
+    probe.onloadedmetadata=()=>finish();
+    probe.onerror=()=>finish(new Error('unsupported audio'));
+    probe.preload='metadata';
+    probe.src=url;
+  });
+
+  input.addEventListener('change',async()=>{
+    const file=input.files[0];
+    input.value='';
+    if(!file)return;
+    input.disabled=remove.disabled=true;
+    status('Проверяю дорожку…');
+    const blob=file.slice(0,file.size,'audio/mp4');
+    const url=URL.createObjectURL(blob);
+    try {
+      const duration=await durationOf(url);
+      if(!Number.isFinite(duration)||Math.abs(duration-(coreSeconds+1))>.5){
+        status('Выбери готовую дорожку комплекса длительностью '+formatClock((coreSeconds+1)*1000)+'.');
+        return;
+      }
+      const cache=await open();
+      await cache.put(entry,new Response(blob,{headers:{
+        'Content-Type':'audio/mp4','X-Track-Name':encodeURIComponent(file.name)
+      }}));
+      setTrack(blob,file.name);
+    }catch{
+      status('Дорожку не удалось сохранить. Проверь, что выбран файл M4A.');
+    }finally{
+      URL.revokeObjectURL(url);
+      input.disabled=remove.disabled=false;
+    }
+  });
+
+  remove.addEventListener('click',async()=>{
+    input.disabled=remove.disabled=true;
+    try {
+      await (await open()).delete(entry);
+      setTrack(null);
+    }catch{
+      status('Не удалось удалить дорожку.');
+    }finally{
+      input.disabled=remove.disabled=false;
+    }
+  });
+
+  if(!('caches' in window)){
+    status('Этот браузер не поддерживает сохранение дорожки на устройстве.');
+    return;
+  }
+  void open().then(cache=>cache.match(entry)).then(async response=>{
+    if(response)setTrack(await response.blob(),decodeURIComponent(response.headers.get('X-Track-Name')||'M4A'));
+  }).catch(()=>status('Не удалось загрузить сохранённую дорожку.')).finally(()=>{input.disabled=false;});
+}
+setupPersonalTrack();
+
 function keepScreenOn(){
   if(wakeLock || wakeRequest || document.hidden || active?.timer?.mode!=='running')return;
   const request=navigator.wakeLock?.request('screen');

@@ -1,14 +1,14 @@
 import {exerciseVideos} from './videos.js';
 import {exerciseIllustrations} from './illustrations.js?v=9';
 
-const name='training-week-v15';
+const name='training-week-v16';
 const scope=self.registration.scope;
 const absolute=path=>new URL(path,scope).href;
-const shell=['./index.html','./app.js?v=14','./videos.js','./illustrations.js?v=9','./kettlebells.js','./exercises.js?v=9','./schedule.js?v=9','./workout.js?v=9','./style.css?v=13','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const shell=['./index.html','./app.js?v=16','./videos.js','./illustrations.js?v=9','./kettlebells.js','./exercises.js?v=9','./schedule.js?v=9','./workout.js?v=16','./style.css?v=13','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
 const assets=new Set(shell.map(absolute));
 const media=new Set([
   ...Object.values(exerciseVideos).filter(clip=>clip.file).map(clip=>clip.file),
-  './timer-core-sport.m4a'
+  './timer-core-sport-12.m4a'
 ].map(absolute));
 const illustrations=new Set(Object.values(exerciseIllustrations).map(drawing=>absolute(drawing.file)));
 

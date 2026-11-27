@@ -24,7 +24,7 @@ export const coreMoves = [
   {id:'crunch', seconds:35}, {id:'cross',seconds:35}, {id:'legRaise',seconds:35}, {id:'climber',seconds:60}
 ];
 export const coreRounds = 2;
-export const restSeconds = 15;
+export const restSeconds = 12;
 export const intervals = [];
 for(let round=1;round<=coreRounds;round++){
   for(const [index,movement] of coreMoves.entries()){

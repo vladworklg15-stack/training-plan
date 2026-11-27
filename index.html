@@ -10,7 +10,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="stylesheet" href="./style.css?v=13">
-  <script type="module" src="./app.js?v=14"></script>
+  <script type="module" src="./app.js?v=16"></script>
 </head>
 <body>
   <header class="mast"><div class="frame brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>План тренировок</div></header>
@@ -36,6 +36,13 @@
         <button id="kettlebell-open" class="outline" type="button">Все 16 видео</button>
         <button id="kettlebell-today" class="outline" type="button" hidden>Открыть вариант дня</button>
       </section>
+      <details class="calendar">
+        <summary>Музыка для пресса</summary>
+        <label class="time-choice" for="core-music-file">Готовая дорожка таймера</label>
+        <input id="core-music-file" type="file" accept=".m4a,audio/mp4,audio/x-m4a" disabled>
+        <p id="core-music-status" class="muted" role="status">Используются сигналы таймера.</p>
+        <button class="outline" id="core-music-remove" type="button" hidden>Удалить свою дорожку</button>
+      </details>
       <details class="calendar">
         <summary>Календарь iPhone</summary>
         <label class="time-choice">Начало тренировки<select id="calendar-start">
@@ -84,7 +91,7 @@
           <p id="timer-next"></p>
           <button class="timer-button" id="timer-toggle" type="button">Запустить таймер</button>
           <p id="timer-audio-status" role="status" hidden></p>
-          <audio id="timer-audio" src="./timer-core-sport.m4a" preload="auto" hidden></audio>
+          <audio id="timer-audio" src="./timer-core-sport-12.m4a" preload="auto" hidden></audio>
         </section>
         <div id="exercise-content">
           <video id="exercise-video" playsinline muted loop controls preload="metadata" hidden></video>
