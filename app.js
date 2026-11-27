@@ -281,8 +281,8 @@ function setupPersonalTrack(){
     const url=URL.createObjectURL(blob);
     try {
       const duration=await durationOf(url);
-      if(!Number.isFinite(duration)||Math.abs(duration-(coreSeconds+1))>.5){
-        status('Выбери готовую дорожку комплекса длительностью '+formatClock((coreSeconds+1)*1000)+'.');
+      if(!Number.isFinite(duration)||duration<coreSeconds+.5||duration>coreSeconds+30.5){
+        status('Выбери готовую дорожку: '+formatClock(coreSeconds*1000)+' на комплекс и до 30 сек. на финал.');
         return;
       }
       const cache=await open();
