@@ -29,6 +29,7 @@ let pageProgress=null;
 let currentExercise=null;
 const timerAudio=el('timer-audio');
 const defaultTimerTrack=timerAudio.getAttribute('src');
+const offlineTimerTrack=timerAudio.getAttribute('data-offline-src');
 let personalTrackUrl=null;
 let audioRequest=0;
 const phaseStarts=intervals.map((_,index)=>intervals.slice(0,index).reduce((sum,phase)=>sum+phase.seconds,0));
@@ -215,10 +216,14 @@ function stopTimerAudio(){
   el('timer-audio-status').hidden=true;
 }
 
+function preferredTimerTrack(){
+  return personalTrackUrl||(navigator.onLine===false?offlineTimerTrack:defaultTimerTrack);
+}
+
 function startTimerAudio(timer,now){
   const request=++audioRequest;
   el('timer-audio-status').hidden=true;
-  const track=personalTrackUrl||defaultTimerTrack;
+  const track=preferredTimerTrack();
   if(timerAudio.getAttribute('src')!==track)timerAudio.setAttribute('src',track);
   timerAudio.currentTime=timerAudioPosition(timer,now);
   // Safari must receive play() directly in the start or resume button handler.
@@ -248,9 +253,9 @@ function setupPersonalTrack(){
   const setTrack=(blob,name)=>{
     if(personalTrackUrl)URL.revokeObjectURL(personalTrackUrl);
     personalTrackUrl=blob?URL.createObjectURL(blob):null;
-    if(session.hidden)timerAudio.setAttribute('src',personalTrackUrl||defaultTimerTrack);
+    if(session.hidden)timerAudio.setAttribute('src',preferredTimerTrack());
     remove.hidden=!blob;
-    status(blob?'На этом устройстве: '+name:'Используются сигналы таймера.');
+    status(blob?'На этом устройстве: '+name:'Используется музыка с сайта.');
   };
 
   const durationOf=(url)=>new Promise((resolve,reject)=>{
