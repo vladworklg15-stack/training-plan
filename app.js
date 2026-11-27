@@ -32,7 +32,11 @@ const timerSignals={
   rest:'./media/timer-rest.wav',
   complete:'./media/timer-complete.wav'
 };
+const timerNotes={work:[880],rest:[520,392],complete:[660,880,1100]};
 const timerAudio=el('timer-audio');
+let audioContext=null;
+let cueOutput=null;
+let cueRequest=0;
 let wakeLock=null;
 let wakeRequest=null;
 let currentDate=sessionDate(new Date());
@@ -51,14 +55,18 @@ function text(id,value) {
   if(el(id).textContent!==value)el(id).textContent=value;
 }
 function workoutFor(day){return plans[day.key];}
+function belongsToDay(progress,day){
+  return progress?.date===sessionDate(day.date)&&progress.key===day.key;
+}
 function recover(day){
-  const value=pageProgress??read(storeKey);
-  if(value?.date!==sessionDate(day.date) || value.key!==day.key ||
+  const value=belongsToDay(pageProgress,day)?pageProgress:read(storeKey);
+  if(!belongsToDay(value,day) ||
     !Number.isInteger(value.index) || value.index<0) return null;
   // Older sessions recorded only the index, before the kettlebell exercises were inserted.
   const index=value.exerciseId ? workoutFor(day).findIndex(item=>item.id===value.exerciseId)
     : value.index+Number(value.index>=(addedExercisePositions[day.key]??Infinity));
   if(index<0 || index>=workoutFor(day).length)return null;
+  if(value!==pageProgress&&workoutFor(day)[index].id==='core')return null;
   return {...value,index,timer:value===pageProgress?value.timer:null};
 }
 function newDay() {
@@ -112,7 +120,9 @@ function renderOverview(){
     return row;
   }));
   el('begin-bar').hidden=entries.length===0;
-  text('begin',recover(selected)?'Продолжить':'Начать');
+  const progress=recover(selected);
+  text('begin',progress?'Продолжить':'Начать');
+  el('reset-workout').disabled=!progress;
   const alternative=kettlebellVideos.find(clip=>clip.id===kettlebellAlternatives[selected.key]);
   el('kettlebell-today').hidden=!alternative;
   text('kettlebell-entry-summary',alternative
@@ -192,21 +202,78 @@ kettlebellPlayer.addEventListener('error',()=>{
 
 function persist(){
   pageProgress=!active||active.finished?null:{...active,exerciseId:plans[active.key][active.index].id};
-  const {key,date,index,exerciseId}=pageProgress||{};
-  save(storeKey,pageProgress?{key,date,index,exerciseId}:null);
+  if(!pageProgress||pageProgress.exerciseId==='core'){
+    save(storeKey,null);
+    return;
+  }
+  const {key,date,index,exerciseId}=pageProgress;
+  save(storeKey,{key,date,index,exerciseId});
 }
 
-function signal(cue){
+function stopCue(){
+  cueRequest++;
+  cueOutput?.disconnect();
+  cueOutput=null;
+  timerAudio.pause();
+  el('timer-audio-status').hidden=true;
+}
+
+function playRecordedCue(cue,request){
   const file=timerSignals[cue];
   if(timerAudio.getAttribute('src')===file)timerAudio.currentTime=0;
   else timerAudio.setAttribute('src',file);
-  void timerAudio.play().then(()=>{
-    el('timer-audio-status').hidden=true;
-  }).catch(error=>{
-    if(error.name==='AbortError')return;
-    text('timer-audio-status','Звук не запустился. Нажми «Проверить звук».');
+  void timerAudio.play().catch(error=>{
+    if(request!==cueRequest||error.name==='AbortError')return;
+    text('timer-audio-status','Safari или браузер не воспроизвёл сигнал таймера.');
     el('timer-audio-status').hidden=false;
   });
+}
+
+function playTimerNotes(cue){
+  const notes=timerNotes[cue];
+  const start=audioContext.currentTime;
+  const output=audioContext.createGain();
+  cueOutput=output;
+  output.connect(audioContext.destination);
+  notes.forEach((frequency,index)=>{
+    const from=start+index*.17;
+    const oscillator=audioContext.createOscillator();
+    oscillator.type='triangle';
+    oscillator.frequency.value=frequency;
+    const envelope=audioContext.createGain();
+    envelope.gain.setValueAtTime(.001,from);
+    envelope.gain.exponentialRampToValueAtTime(.42,from+.012);
+    envelope.gain.exponentialRampToValueAtTime(.001,from+.15);
+    oscillator.connect(envelope).connect(output);
+    oscillator.start(from);
+    oscillator.stop(from+.16);
+  });
+}
+
+function signal(cue,fromTap=false){
+  stopCue();
+  const request=cueRequest;
+  if(fromTap){
+    try {
+      const Context=window.AudioContext||window.webkitAudioContext;
+      if(Context&&!audioContext)audioContext=new Context();
+      if(audioContext&&navigator.audioSession)navigator.audioSession.type='playback';
+    } catch {}
+  }
+  if(audioContext?.state==='running'){
+    playTimerNotes(cue);
+  }else if(fromTap&&audioContext){
+    // The first resume call must run directly inside the timer button's tap.
+    void audioContext.resume().then(()=>{
+      if(request!==cueRequest)return;
+      if(audioContext.state==='running')playTimerNotes(cue);
+      else playRecordedCue(cue,request);
+    }).catch(()=>{
+      if(request===cueRequest)playRecordedCue(cue,request);
+    });
+  }else{
+    playRecordedCue(cue,request);
+  }
 }
 function keepScreenOn(){
   if(wakeLock || wakeRequest || document.hidden || active?.timer?.mode!=='running')return;
@@ -336,8 +403,7 @@ function overviewScreen(){
     persist();
   }
   releaseScreen();
-  timerAudio.pause();
-  el('timer-audio-status').hidden=true;
+  stopCue();
   showExercise(null);
   session.hidden=true;
   overview.hidden=false;
@@ -357,6 +423,12 @@ el('begin').addEventListener('click',()=>{
   session.hidden=false;
   renderSession(true);
 });
+el('reset-workout').addEventListener('click',()=>{
+  if(belongsToDay(pageProgress,selected))pageProgress=null;
+  if(belongsToDay(read(storeKey),selected))save(storeKey,null);
+  renderOverview();
+  el('begin').focus({preventScroll:true});
+});
 el('back').addEventListener('click',overviewScreen);
 el('next').addEventListener('click',()=>{
   if(active.finished){overviewScreen();return;}
@@ -373,16 +445,15 @@ el('timer-toggle').addEventListener('click',()=>{
   else if(active.timer.mode==='paused')active.timer=resumeTimer(active.timer,now);
   else active.timer=pauseTimer(active.timer,now);
   if(active.timer.mode==='running'){
-    signal(intervals[active.timer.phase].kind);
+    signal(intervals[active.timer.phase].kind,true);
     keepScreenOn();
   }else{
-    timerAudio.pause();
+    stopCue();
     releaseScreen();
   }
   persist();
   renderTimer(now);
 });
-el('timer-audio-test').addEventListener('click',()=>signal('work'));
 
 el('calendar-start').value=startOptions.includes(read(settingsKey))?read(settingsKey):calendarTimes.workoutStart;
 el('calendar-start').addEventListener('change',()=>{
@@ -415,12 +486,10 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('pageshow',event=>{
   if(!event.persisted)return;
-  if(pageProgress)pageProgress.timer=null;
-  if(!active?.timer)return;
-  active.timer=null;
-  timerAudio.pause();
-  releaseScreen();
-  renderSession();
+  if(pageProgress?.exerciseId!=='core')return;
+  pageProgress=null;
+  if(active)active.timer=null;
+  overviewScreen();
 });
 setInterval(()=>tick(true),150);
 setInterval(updateDay,30000);

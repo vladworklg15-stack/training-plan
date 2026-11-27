@@ -9,8 +9,8 @@
   <title>План тренировок</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icon-192.png">
-  <link rel="stylesheet" href="./style.css?v=11">
-  <script type="module" src="./app.js?v=12"></script>
+  <link rel="stylesheet" href="./style.css?v=13">
+  <script type="module" src="./app.js?v=13"></script>
 </head>
 <body>
   <header class="mast"><div class="frame brand"><span class="mark" aria-hidden="true"><i></i><i></i><i></i></span>План тренировок</div></header>
@@ -26,6 +26,7 @@
       <div id="day-plan" aria-label="План упражнений"></div>
       <div class="bottom-bar" id="begin-bar">
         <button class="primary wide" id="begin" type="button">Начать</button>
+        <button class="outline" id="reset-workout" type="button" disabled>Сбросить тренировку</button>
       </div>
       <section class="kettlebell-entry" aria-labelledby="kettlebell-entry-title">
         <div>
@@ -82,7 +83,6 @@
           <progress id="timer-progress" aria-label="Прошло в текущем интервале"></progress>
           <p id="timer-next"></p>
           <button class="timer-button" id="timer-toggle" type="button">Запустить таймер</button>
-          <button class="outline" id="timer-audio-test" type="button">Проверить звук</button>
           <p id="timer-audio-status" role="status" hidden></p>
           <audio id="timer-audio" src="./media/timer-work.wav" preload="auto" hidden></audio>
         </section>

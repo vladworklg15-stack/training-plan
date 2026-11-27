@@ -43,6 +43,9 @@ h2 { line-height: 1.15; letter-spacing: -.028em; font-size: 1.1rem; }
 .primary,.outline,.timer-button { border: 1px solid var(--line); border-radius: 11px; background: var(--white); font-weight: 720; padding: 7px 14px; }
 .primary,.timer-button { background: var(--lime); border-color: #b1c96d; color: var(--ink); }
 .wide { width: 100%; font-size: 1.06rem; min-height: 52px; }
+#begin-bar { display: flex; align-items: stretch; gap: 8px; }
+#begin { flex: 1; min-width: 0; }
+#reset-workout { flex: 0 1 auto; }
 .calendar { border: 1px solid var(--line); border-radius: 13px; padding: 0 13px; background: var(--white); margin: 8px 0; }
 .calendar summary { min-height: 44px; padding: 10px 0; font-weight: 650; cursor: pointer; }
 .calendar[open] { padding-bottom: 13px; }
@@ -71,7 +74,6 @@ video { max-height: 440px; background: #f5f5f0; }
 #timer-clock { text-align: center; font-variant-numeric: tabular-nums; font-size: clamp(3rem,13vw,5rem); line-height:1.03; font-weight: 760; letter-spacing: -.065em; }
 .timer progress { width: 100%; height: 9px; margin: 9px 0 6px; accent-color: var(--lime); }
 .timer-button { width: 100%; margin-top: 8px; }
-#timer-audio-test { margin-top:8px; background:transparent; border-color:#b7c8b4; }
 #timer-audio-status { margin-top:6px; }
 .kettlebell-entry { display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:var(--white); border:1px solid var(--line); border-radius:13px; margin:8px 0; padding:13px; }
 .kettlebell-entry > div { flex:1 1 100%; }
